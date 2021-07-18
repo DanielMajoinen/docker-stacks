@@ -13,6 +13,8 @@ services:
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
       - /dev/disk/:/dev/disk:ro
+    networks:
+      - backend
     restart: unless-stopped
 
   docker_exporter:
@@ -20,6 +22,8 @@ services:
     container_name: metrics_docker_exporter
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - backend
     restart: unless-stopped
 
   prometheus:
@@ -32,6 +36,8 @@ services:
       - 9090:9090
     volumes:
       - ${ROOT_DIRECTORY}/prometheus:/etc/prometheus
+    networks:
+      - backend
     restart: unless-stopped
 
   influxdb:
@@ -45,6 +51,9 @@ services:
       - INFLUXDB_DB=${INFLUXDB_DATABASE}
       - INFLUXDB_ADMIN_USER=${INFLUXDB_USERNAME}
       - INFLUXDB_ADMIN_PASSWORD=${INFLUXDB_PASSWORD}
+    networks:
+      - frontend
+      - backend
     restart: unless-stopped
 
   grafana:
@@ -58,4 +67,12 @@ services:
       - 3000:3000
     volumes:
       - ${ROOT_DIRECTORY}/grafana:/var/lib/grafana
+    networks:
+      - frontend
+      - backend
     restart: unless-stopped
+
+networks:
+  frontend:
+    external: true
+  backend:
