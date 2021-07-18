@@ -46,7 +46,8 @@ services:
     ports:
       - 8086:8086
     volumes:
-      - ${ROOT_DIRECTORY}/influxdb:/var/lib/influxdb
+      - ${ROOT_DIRECTORY}/influxdb/data:/var/lib/influxdb2
+      - ${ROOT_DIRECTORY}/influxdb/config:/etc/influxdb2
     environment:
       - INFLUXDB_DB=${INFLUXDB_DATABASE}
       - INFLUXDB_ADMIN_USER=${INFLUXDB_USERNAME}
