@@ -1,0 +1,64 @@
+version: '3.9'
+
+services:
+  cadvisor:
+    image: zcube/cadvisor:latest
+    container_name: cadvisor
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    restart: unless-stopped
+
+  prometheus:
+    container_name: metrics_prometheus
+    image: prom/prometheus:latest
+    depends_on:
+      - cadvisor
+      - docker_exporter
+    ports:
+      - 9090:9090
+    volumes:
+      - ${ROOT_DIRECTORY}/prometheus:/etc/prometheus
+    networks:
+      - backend
+    restart: unless-stopped
+
+  influxdb:
+    container_name: metrics_influxdb
+    image: arm32v7/influxdb:1.8.6
+    ports:
+      - 8086:8086
+    volumes:
+      - ${ROOT_DIRECTORY}/influxdb/config:/etc/influxdb
+      - ${ROOT_DIRECTORY}/influxdb/data:/var/lib/influxdb
+    environment:
+      - INFLUXDB_ADMIN_USER=${INFLUXDB_ADMIN_USERNAME}
+      - INFLUXDB_ADMIN_PASSWORD=${INFLUXDB_ADMIN_PASSWORD}
+    networks:
+      - frontend
+      - backend
+    restart: unless-stopped
+
+  grafana:
+    container_name: metrics_grafana
+    image: grafana/grafana:latest
+    user: ${PUID}:${PGID}
+    depends_on:
+      - prometheus
+      - influxdb
+    ports:
+      - 3000:3000
+    volumes:
+      - ${ROOT_DIRECTORY}/grafana:/var/lib/grafana
+    networks:
+      - frontend
+      - backend
+    restart: unless-stopped
+
+networks:
+  frontend:
+    external: true
+  backend:
