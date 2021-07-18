@@ -1,0 +1,60 @@
+version: '3.9'
+
+services:
+  cadvisor:
+    container_name: metrics_cadvisor
+    image: gcr.io/cadvisor/cadvisor:latest
+    privileged: true
+    devices:
+      - /dev/kmsg
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    restart: unless-stopped
+
+  docker_exporter:
+    image: prometheusnet/docker_exporter
+    container_name: metrics_docker_exporter
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+
+  prometheus:
+    container_name: metrics_prometheus
+    image: prom/prometheus:latest
+    depends_on:
+      - cadvisor
+      - docker_exporter
+    ports:
+      - 9090:9090
+    volumes:
+      - ./prometheus:/etc/prometheus
+    restart: unless-stopped
+
+  influxdb:
+    container_name: metrics_influxdb
+    image: influxdb:latest
+    ports:
+      - 8086:8086
+    volumes:
+      - ./influxdb:/var/lib/influxdb
+    environment:
+      - INFLUXDB_DB=${INFLUXDB_DATABASE}
+      - INFLUXDB_ADMIN_USER=${INFLUXDB_USERNAME}
+      - INFLUXDB_ADMIN_PASSWORD=${INFLUXDB_PASSWORD}
+    restart: unless-stopped
+
+  grafana:
+    container_name: metrics_grafana
+    image: grafana/grafana:latest
+    depends_on:
+      - prometheus
+      - influxdb
+    ports:
+      - 3000:3000
+    volumes:
+      - ./grafana:/var/lib/grafana
+    restart: unless-stopped

@@ -1,1 +1,9 @@
-*.env
+*
+
+!.gitignore
+!.gitkeep
+!docker-compose.yml
+
+!*/
+
+!*/prometheus/prometheus.yml
