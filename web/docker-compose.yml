@@ -1,0 +1,61 @@
+version: '3.9'
+
+services:
+  ddns:
+    container_name: web_cloudflare_ddns
+    image: oznu/cloudflare-ddns:latest
+    environment:
+      - API_KEY=${CLOUDFLARE_API_KEY}
+      - ZONE=${DOMAIN}
+      - SUBDOMAIN=${SUBDOMAIN}
+      - PROXIED=false
+    networks:
+      - backend
+    restart: unless-stopped
+  
+  adguard:
+    image: adguard/adguardhome:latest
+    container_name: web_adguard
+    ports:
+      - 53:53/tcp
+      - 53:53/udp
+      - 8081:80
+    volumes:
+      - ${ROOT_DIRECTORY}/adguard/data:/opt/adguardhome/work
+      - ${ROOT_DIRECTORY}/adguard/config:/opt/adguardhome/conf
+    networks:
+      - frontend
+      - backend
+    restart: unless-stopped
+
+  traefik:
+    image: traefik:2.4
+    container_name: web_traefik
+    command:
+      - '--entrypoints.web.address=:80'
+      - '--entrypoints.websecure.address=:443'
+      - '--certificatesresolvers.cloudflare-resolver.acme.dnschallenge=true'
+      - '--certificatesresolvers.cloudflare-resolver.acme.dnschallenge.provider=cloudflare'
+      - '--certificatesresolvers.cloudflare-resolver.acme.email=${EMAIL}'
+      - '--certificatesresolvers.cloudflare-resolver.acme.storage=/letsencrypt/acme.json'
+    ports:
+      - 80:80
+      - 443:443
+      - 8080:8080
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ${ROOT_DIRECTORY}/traefik/traefik.toml:/etc/traefik/traefik.toml
+      - ${ROOT_DIRECTORY}/traefik/conf.d:/etc/traefik/conf.d
+      - ${ROOT_DIRECTORY}/traefik/letsencrypt:/letsencrypt
+    environment:
+      CF_API_EMAIL: ${CLOUDFLARE_API_EMAIL}
+      CF_API_KEY: ${CLOUDFLARE_API_KEY}
+    networks:
+      - frontend
+      - backend
+    restart: unless-stopped
+
+networks:
+  frontend:
+    external: true
+  backend:

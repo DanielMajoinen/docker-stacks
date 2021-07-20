@@ -1,0 +1,27 @@
+[log]
+  level = "INFO"
+
+# API and dashboard configuration
+[api]
+  insecure = true
+
+[providers]
+  [providers.docker]
+    exposedByDefault = false
+    useBindPortIP = true
+  [providers.file]
+    directory = "/etc/traefik/conf.d"
+    watch = true
+
+[entryPoints]
+  [entryPoints.web]
+    address = ":80"
+  [entryPoints.websecure]
+    address = ":443"
+  [entryPoints.metrics]
+    address = ":8082"
+
+# Metrics definition
+[metrics]
+  [metrics.prometheus]
+    entryPoint = "metrics"
