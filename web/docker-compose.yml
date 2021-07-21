@@ -7,7 +7,6 @@ services:
     environment:
       - API_KEY=${CLOUDFLARE_API_KEY}
       - ZONE=${DOMAIN}
-      - SUBDOMAIN=${SUBDOMAIN}
       - PROXIED=false
     networks:
       - backend
