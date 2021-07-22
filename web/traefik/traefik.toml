@@ -25,6 +25,13 @@
   certFile = "/certs/cert.crt"
   keyFile = "/certs/cert.key"
 
+[certificatesResolvers.cloudflareCertificatesResolver.acme]
+  dnschallenge = true
+  email = "daniel@majoinen.com"
+  storage = "/letsencrypt/acme.json"
+  [certificatesResolvers.cloudflareCertificatesResolver.acme.dnsChallenge]
+    provider = "cloudflare"
+
 # Metrics definition
 [metrics]
   [metrics.prometheus]

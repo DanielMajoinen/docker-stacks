@@ -30,11 +30,6 @@ services:
   traefik:
     image: traefik:2.4
     container_name: web_traefik
-    command:
-      - '--certificatesResolvers.cloudflareResolver.acme.dnsChallenge=true'
-      - '--certificatesResolvers.cloudflareResolver.acme.dnsChallenge.provider=cloudflare'
-      - '--certificatesResolvers.cloudflareResolver.acme.email=${EMAIL}'
-      - '--certificatesResolvers.cloudflareResolver.acme.storage=/letsencrypt/acme.json'
     ports:
       - 80:80
       - 443:443
