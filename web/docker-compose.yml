@@ -33,10 +33,10 @@ services:
     command:
       - '--entrypoints.web.address=:80'
       - '--entrypoints.websecure.address=:443'
-      - '--certificatesresolvers.cloudflare-resolver.acme.dnschallenge=true'
-      - '--certificatesresolvers.cloudflare-resolver.acme.dnschallenge.provider=cloudflare'
-      - '--certificatesresolvers.cloudflare-resolver.acme.email=${EMAIL}'
-      - '--certificatesresolvers.cloudflare-resolver.acme.storage=/letsencrypt/acme.json'
+      - '--certificatesresolvers.cloudflareresolver.acme.dnschallenge=true'
+      - '--certificatesresolvers.cloudflareresolver.acme.dnschallenge.provider=cloudflare'
+      - '--certificatesresolvers.cloudflareresolver.acme.email=${EMAIL}'
+      - '--certificatesresolvers.cloudflareresolver.acme.storage=/letsencrypt/acme.json'
     ports:
       - 80:80
       - 443:443
@@ -46,6 +46,7 @@ services:
       - ${ROOT_DIRECTORY}/traefik/traefik.toml:/etc/traefik/traefik.toml
       - ${ROOT_DIRECTORY}/traefik/conf.d:/etc/traefik/conf.d
       - ${ROOT_DIRECTORY}/traefik/letsencrypt:/letsencrypt
+      - ${ROOT_DIRECTORY}/traefik/certs:/certs
     environment:
       CF_API_EMAIL: ${CLOUDFLARE_API_EMAIL}
       CF_API_KEY: ${CLOUDFLARE_API_KEY}
