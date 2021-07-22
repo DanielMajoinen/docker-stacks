@@ -21,6 +21,10 @@
   [entryPoints.metrics]
     address = ":8082"
 
+[tls.stores.default.defaultCertificate]
+  certFile = "/certs/cert.crt"
+  keyFile = "/certs/cert.key"
+
 # Metrics definition
 [metrics]
   [metrics.prometheus]
