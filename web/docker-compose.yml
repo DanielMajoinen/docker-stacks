@@ -31,12 +31,10 @@ services:
     image: traefik:2.4
     container_name: web_traefik
     command:
-      - '--entrypoints.web.address=:80'
-      - '--entrypoints.websecure.address=:443'
-      - '--certificatesresolvers.cloudflareresolver.acme.dnschallenge=true'
-      - '--certificatesresolvers.cloudflareresolver.acme.dnschallenge.provider=cloudflare'
-      - '--certificatesresolvers.cloudflareresolver.acme.email=${EMAIL}'
-      - '--certificatesresolvers.cloudflareresolver.acme.storage=/letsencrypt/acme.json'
+      - '--certificatesResolvers.cloudflareResolver.acme.dnsChallenge=true'
+      - '--certificatesResolvers.cloudflareResolver.acme.dnsChallenge.provider=cloudflare'
+      - '--certificatesResolvers.cloudflareResolver.acme.email=${EMAIL}'
+      - '--certificatesResolvers.cloudflareResolver.acme.storage=/letsencrypt/acme.json'
     ports:
       - 80:80
       - 443:443
