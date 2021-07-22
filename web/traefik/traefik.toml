@@ -25,11 +25,11 @@
   certFile = "/certs/cert.crt"
   keyFile = "/certs/cert.key"
 
-[certificatesResolvers.cloudflareCertificatesResolver.acme]
+[certificatesResolvers.default.acme]
   dnschallenge = true
   email = "daniel@majoinen.com"
   storage = "/letsencrypt/acme.json"
-  [certificatesResolvers.cloudflareCertificatesResolver.acme.dnsChallenge]
+  [certificatesResolvers.default.acme.dnsChallenge]
     provider = "cloudflare"
 
 # Metrics definition
