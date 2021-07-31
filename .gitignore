@@ -3,6 +3,7 @@
 !.gitignore
 !.gitkeep
 !docker-compose.yml
+!.env.sample
 
 !*/
 
