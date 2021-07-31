@@ -31,7 +31,7 @@ services:
       - traefik.tcp.services.adguard-dns.loadbalancer.server.port=853
       - traefik.tcp.routers.adguard-dns.rule=Host(`${ADGUARD_DNS_HOST}`)
       - traefik.tcp.routers.adguard-dns.tls.certresolver=default
-      - traefik.tcp.routers.adguard-dns.service=adguard
+      - traefik.tcp.routers.adguard-dns.service=adguard-dns
     networks:
       - frontend
       - backend
