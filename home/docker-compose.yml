@@ -1,0 +1,60 @@
+version: '3.9'
+
+services:
+  mqtt:
+    container_name: home_mqtt
+    image: eclipse-mosquitto:latest
+    ports:
+      - 1883:1883
+    volumes:
+      - ${ROOT_DIRECTORY}/mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ${ROOT_DIRECTORY}/mqtt/data:/mosquitto/data
+      - ${ROOT_DIRECTORY}/mqtt/log:/mosquitto/log
+    networks:
+      - frontend
+      - backend
+    restart: unless-stopped
+
+  mariadb:
+    container_name: home_mariadb
+    image: mariadb:latest
+    user: ${PUID}:${PGID}
+    ports:
+      - 3306:3306
+    volumes:
+      - ${ROOT_DIRECTORY}/mariadb:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    networks:
+      - backend
+    restart: unless-stopped
+
+  homeassistant:
+    container_name: home_assistant
+    image: ghcr.io/home-assistant/home-assistant:stable
+    depends_on:
+      - mariadb
+      - mqtt
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${ROOT_DIRECTORY}/home-assistant:/config
+      - ${ROOT_DIRECTORY}/home-assistant/docker/run:/etc/services.d/home-assistant/run
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - PACKAGES=iputils
+    cap_add:
+      - NET_ADMIN
+      - NET_BIND_SERVICE
+      - SYS_ADMIN
+    network_mode: host
+    restart: unless-stopped
+
+networks:
+  frontend:
+    external: true
+  backend:
