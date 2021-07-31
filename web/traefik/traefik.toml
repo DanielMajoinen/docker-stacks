@@ -8,7 +8,6 @@
 [providers]
   [providers.docker]
     exposedByDefault = false
-    useBindPortIP = true
   [providers.file]
     directory = "/etc/traefik/conf.d"
     watch = true
@@ -19,15 +18,7 @@
   [entryPoints.websecure]
     address = ":443"
   [entryPoints.metrics]
-    address = ":8082"
-  [entryPoints.adguard]
-    address = ":853/tcp"
-  [entryPoints.wireguard]
-    address = ":51820/udp"
-
-[tls.stores.default.defaultCertificate]
-  certFile = "/certs/cert.crt"
-  keyFile = "/certs/cert.key"
+    address = ":8081"
 
 [certificatesResolvers.default.acme]
   dnschallenge = true
@@ -35,6 +26,8 @@
   storage = "/letsencrypt/acme.json"
   [certificatesResolvers.default.acme.dnsChallenge]
     provider = "cloudflare"
+    delayBeforeCheck = 0
+    resolvers = ["1.1.1.1:53", "8.8.8.8:53"]
 
 # Metrics definition
 [metrics]

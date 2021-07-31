@@ -5,7 +5,7 @@ services:
     container_name: web_cloudflare_ddns
     image: oznu/cloudflare-ddns:latest
     environment:
-      - API_KEY=${CLOUDFLARE_API_KEY}
+      - API_KEY=${CLOUDFLARE_DNS_API_KEY}
       - ZONE=${DOMAIN}
       - SUBDOMAIN=${SUBDOMAIN}
       - PROXIED=false
@@ -19,19 +19,12 @@ services:
     ports:
       - 53:53/tcp
       - 53:53/udp
-      - 8081:80
+      - 853:853/tcp # Required for DNS-over-TLS
+      - 8082:80
     volumes:
       - ${ROOT_DIRECTORY}/adguard/data:/opt/adguardhome/work
       - ${ROOT_DIRECTORY}/adguard/config:/opt/adguardhome/conf
-    labels:
-      - traefik.enable=true
-      - traefik.docker.network=frontend
-      - traefik.backend=adguard
-      - traefik.tcp.services.adguard.loadbalancer.server.port=853
-      - traefik.tcp.routers.adguard.rule=HostSNI(`${ADGUARD_DNS_HOST}`)
-      - traefik.tcp.routers.adguard.tls.certresolver=default
-      - traefik.tcp.routers.adguard.entrypoints=adguard
-      - traefik.tcp.routers.adguard.service=adguard
+      - ${ROOT_DIRECTORY}/traefik/letsencrypt/ssl:/ssl # Required for DNS-over-TLS
     networks:
       - frontend
       - backend
@@ -40,6 +33,8 @@ services:
   wireguard:
     container_name: web_wireguard
     image: ghcr.io/linuxserver/wireguard:latest
+    ports:
+      - 51820:51820/udp
     volumes:
       - ${ROOT_DIRECTORY}/wireguard/config:/config
       - ${ROOT_DIRECTORY}/wireguard/modules:/lib/modules
@@ -52,15 +47,6 @@ services:
       - PEERS=1
       - PEERDNS=auto
       - ALLOWEDIPS=0.0.0.0/0
-    labels:
-      - traefik.enable=true
-      - traefik.docker.network=frontend
-      - traefik.backend=wireguard
-      - traefik.udp.services.wireguard.loadbalancer.server.port=51820
-      - traefik.udp.routers.wireguard.rule=HostSNI(`${WIREGUARD_HOST}`)
-      - traefik.udp.routers.wireguard.tls.certresolver=default
-      - traefik.udp.routers.wireguard.entrypoints=wireguard
-      - traefik.udp.routers.wireguard.service=wireguard
     cap_add:
       - NET_ADMIN
       - SYS_MODULE
@@ -73,25 +59,40 @@ services:
 
   traefik:
     container_name: web_traefik
-    image: traefik:2.4
+    image: traefik:2.4.13
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
     ports:
       - 80:80
       - 443:443
       - 8080:8080
-      - 853:853/tcp
-      - 51820:51820/udp
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ${ROOT_DIRECTORY}/traefik/traefik.toml:/etc/traefik/traefik.toml
       - ${ROOT_DIRECTORY}/traefik/conf.d:/etc/traefik/conf.d
       - ${ROOT_DIRECTORY}/traefik/letsencrypt:/letsencrypt
-      - ${ROOT_DIRECTORY}/traefik/certs:/certs
     environment:
       - CF_API_EMAIL=${CLOUDFLARE_API_EMAIL}
-      - CF_API_KEY=${CLOUDFLARE_API_KEY}
+      - CF_API_KEY=${CLOUDFLARE_GLOBAL_API_KEY}
     networks:
       - frontend
       - backend
+    restart: unless-stopped
+
+  traefik-certs-dumper:
+    container_name: web_traefik_certs_dumper
+    image: ldez/traefik-certs-dumper:v2.7.4
+    entrypoint: sh -c '
+      apk add jq;
+      while ! [ -e /data/acme.json ]
+      || ! [ `jq ".[] | .Certificates | length" /data/acme.json` != 0 ]; do
+      sleep 60;
+      done
+      && traefik-certs-dumper file --version v2 --watch
+      --source /data/acme.json --dest /data/ssl'
+    volumes:
+      - ${ROOT_DIRECTORY}/traefik/letsencrypt:/data
     restart: unless-stopped
 
 networks:
