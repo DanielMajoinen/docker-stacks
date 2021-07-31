@@ -13,8 +13,8 @@ services:
     restart: unless-stopped
 
   adguard:
-    image: adguard/adguardhome:latest
     container_name: web_adguard
+    image: adguard/adguardhome:latest
     ports:
       - 53:53/tcp
       - 53:53/udp
@@ -28,17 +28,17 @@ services:
       - traefik.docker.network=frontend
       - traefik.backend=adguard
       - traefik.tcp.services.adguard-dns.loadbalancer.server.port=853
-      - traefik.tcp.routers.adguard-dns.rule=Host(`${ADGUARD_DNS_HOST}`)"
-      - traefik.tcp.routers.adguard-dns.tls.certresolver=default"
-      - traefik.tcp.routers.adguard-dns.service=adguard"
+      - traefik.tcp.routers.adguard-dns.rule=Host(`${ADGUARD_DNS_HOST}`)
+      - traefik.tcp.routers.adguard-dns.tls.certresolver=default
+      - traefik.tcp.routers.adguard-dns.service=adguard
     networks:
       - frontend
       - backend
     restart: unless-stopped
 
   traefik:
-    image: traefik:2.4
     container_name: web_traefik
+    image: traefik:2.4
     ports:
       - 80:80
       - 443:443
@@ -50,8 +50,43 @@ services:
       - ${ROOT_DIRECTORY}/traefik/letsencrypt:/letsencrypt
       - ${ROOT_DIRECTORY}/traefik/certs:/certs
     environment:
-      CF_API_EMAIL: ${CLOUDFLARE_API_EMAIL}
-      CF_API_KEY: ${CLOUDFLARE_API_KEY}
+      - CF_API_EMAIL=${CLOUDFLARE_API_EMAIL}
+      - CF_API_KEY=${CLOUDFLARE_API_KEY}
+    networks:
+      - frontend
+      - backend
+    restart: unless-stopped
+
+  wireguard:
+    container_name: web_wireguard
+    image: ghcr.io/linuxserver/wireguard:latest
+    ports:
+      - 51820:51820/udp
+    volumes:
+      - ${ROOT_DIRECTORY}/wireguard/config:/config
+      - ${ROOT_DIRECTORY}/wireguard/modules:/lib/modules
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - SERVERURL=${WIREGUARD_HOST}
+      - SERVERPORT=51820
+      - PEERS=1
+      - PEERDNS=auto
+      - ALLOWEDIPS=0.0.0.0/0
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=frontend
+      - traefik.backend=wireguard
+      - traefik.udp.services.wireguard.loadbalancer.server.port=51820
+      - traefik.udp.routers.wireguard.rule=Host(`${WIREGUARD_HOST}`)
+      - traefik.udp.routers.wireguard.tls.certresolver=default
+      - traefik.udp.routers.wireguard.service=wireguard
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
     networks:
       - frontend
       - backend
