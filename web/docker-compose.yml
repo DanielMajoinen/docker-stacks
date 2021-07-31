@@ -29,7 +29,7 @@ services:
       - traefik.tcp.services.adguard.loadbalancer.server.port=853
       - traefik.tcp.routers.adguard.rule=HostSNI(`${ADGUARD_DNS_HOST}`)
       - traefik.tcp.routers.adguard.tls.certresolver=default
-      - traefik.udp.routers.adguard.entrypoints=adguard
+      - traefik.tcp.routers.adguard.entrypoints=adguard
     networks:
       - frontend
       - backend
