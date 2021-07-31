@@ -26,10 +26,12 @@ services:
     labels:
       - traefik.enable=true
       - traefik.docker.network=frontend
+      - traefik.backend=adguard
       - traefik.tcp.services.adguard.loadbalancer.server.port=853
       - traefik.tcp.routers.adguard.rule=HostSNI(`${ADGUARD_DNS_HOST}`)
       - traefik.tcp.routers.adguard.tls.certresolver=default
       - traefik.tcp.routers.adguard.entrypoints=adguard
+      - traefik.tcp.routers.adguard.service=adguard
     networks:
       - frontend
       - backend
@@ -53,10 +55,12 @@ services:
     labels:
       - traefik.enable=true
       - traefik.docker.network=frontend
+      - traefik.backend=wireguard
       - traefik.udp.services.wireguard.loadbalancer.server.port=51820
       - traefik.udp.routers.wireguard.rule=HostSNI(`${WIREGUARD_HOST}`)
       - traefik.udp.routers.wireguard.tls.certresolver=default
       - traefik.udp.routers.wireguard.entrypoints=wireguard
+      - traefik.udp.routers.wireguard.service=wireguard
     cap_add:
       - NET_ADMIN
       - SYS_MODULE
