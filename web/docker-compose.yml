@@ -66,9 +66,6 @@ services:
   traefik:
     container_name: web_traefik
     image: traefik:2.4
-    command:
-      - --entrypoints.adguard.address=:853/tcp
-      - --entrypoints.wireguard.address=:51820/udp
     ports:
       - 80:80
       - 443:443

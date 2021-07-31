@@ -20,6 +20,10 @@
     address = ":443"
   [entryPoints.metrics]
     address = ":8082"
+  [entryPoints.adguard]
+    address = ":853/tcp"
+  [entryPoints.wireguard]
+    address = ":51820/udp"
 
 [tls.stores.default.defaultCertificate]
   certFile = "/certs/cert.crt"
