@@ -19,7 +19,6 @@ services:
     ports:
       - 53:53/tcp
       - 53:53/udp
-      - 853:853/tcp
       - 8081:80
     volumes:
       - ${ROOT_DIRECTORY}/adguard/data:/opt/adguardhome/work
@@ -27,32 +26,8 @@ services:
     labels:
       - traefik.enable=true
       - traefik.docker.network=frontend
-      - traefik.backend=adguard
-      - traefik.tcp.services.adguard-dns.loadbalancer.server.port=853
-      - traefik.tcp.routers.adguard-dns.rule=HostSNI(`${ADGUARD_DNS_HOST}`)
-      - traefik.tcp.routers.adguard-dns.tls.certresolver=default
-      - traefik.tcp.routers.adguard-dns.service=adguard-dns
-    networks:
-      - frontend
-      - backend
-    restart: unless-stopped
-
-  traefik:
-    container_name: web_traefik
-    image: traefik:2.4
-    ports:
-      - 80:80
-      - 443:443
-      - 8080:8080
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ${ROOT_DIRECTORY}/traefik/traefik.toml:/etc/traefik/traefik.toml
-      - ${ROOT_DIRECTORY}/traefik/conf.d:/etc/traefik/conf.d
-      - ${ROOT_DIRECTORY}/traefik/letsencrypt:/letsencrypt
-      - ${ROOT_DIRECTORY}/traefik/certs:/certs
-    environment:
-      - CF_API_EMAIL=${CLOUDFLARE_API_EMAIL}
-      - CF_API_KEY=${CLOUDFLARE_API_KEY}
+      - traefik.tcp.services.adguard.loadbalancer.server.port=853
+      - traefik.udp.routers.adguard.entrypoints=adguard
     networks:
       - frontend
       - backend
@@ -61,8 +36,6 @@ services:
   wireguard:
     container_name: web_wireguard
     image: ghcr.io/linuxserver/wireguard:latest
-    ports:
-      - 51820:51820/udp
     volumes:
       - ${ROOT_DIRECTORY}/wireguard/config:/config
       - ${ROOT_DIRECTORY}/wireguard/modules:/lib/modules
@@ -78,16 +51,39 @@ services:
     labels:
       - traefik.enable=true
       - traefik.docker.network=frontend
-      - traefik.backend=wireguard
       - traefik.udp.services.wireguard.loadbalancer.server.port=51820
-      - traefik.udp.routers.wireguard.rule=Host(`${WIREGUARD_HOST}`)
-      - traefik.udp.routers.wireguard.tls.certresolver=default
-      - traefik.udp.routers.wireguard.service=wireguard
+      - traefik.udp.routers.wireguard.entrypoints=wireguard
     cap_add:
       - NET_ADMIN
       - SYS_MODULE
     sysctls:
       - net.ipv4.conf.all.src_valid_mark=1
+    networks:
+      - frontend
+      - backend
+    restart: unless-stopped
+
+  traefik:
+    container_name: web_traefik
+    image: traefik:2.4
+    command:
+      - --entrypoints.adguard.address=:853/tcp
+      - --entrypoints.wireguard.address=:51820/udp
+    ports:
+      - 80:80
+      - 443:443
+      - 8080:8080
+      - 853:853/tcp
+      - 51820:51820/udp
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ${ROOT_DIRECTORY}/traefik/traefik.toml:/etc/traefik/traefik.toml
+      - ${ROOT_DIRECTORY}/traefik/conf.d:/etc/traefik/conf.d
+      - ${ROOT_DIRECTORY}/traefik/letsencrypt:/letsencrypt
+      - ${ROOT_DIRECTORY}/traefik/certs:/certs
+    environment:
+      - CF_API_EMAIL=${CLOUDFLARE_API_EMAIL}
+      - CF_API_KEY=${CLOUDFLARE_API_KEY}
     networks:
       - frontend
       - backend
