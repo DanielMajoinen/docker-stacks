@@ -67,6 +67,13 @@ services:
       - 3000:3000
     volumes:
       - ${ROOT_DIRECTORY}/grafana:/var/lib/grafana
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=frontend
+      - traefik.backend=grafana
+      - traefik.http.routers.grafana.rule=Host(`${GRAFANA_HOST}`)"
+      - traefik.http.routers.grafana.tls.certresolver=default"
+      - traefik.http.routers.grafana.service=grafana"
     networks:
       - frontend
       - backend
