@@ -27,7 +27,7 @@ services:
       - traefik.enable=true
       - traefik.docker.network=frontend
       - traefik.tcp.services.adguard.loadbalancer.server.port=853
-      - traefik.udp.routers.adguard.entrypoints=adguard
+      - traefik.tcp.routers.adguard.entrypoints=adguard
     networks:
       - frontend
       - backend
