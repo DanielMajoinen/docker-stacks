@@ -54,6 +54,8 @@ services:
       - traefik.enable=true
       - traefik.docker.network=frontend
       - traefik.udp.services.wireguard.loadbalancer.server.port=51820
+      - traefik.udp.routers.wireguard.rule=HostSNI(`${WIREGUARD_HOST}`)
+      - traefik.udp.routers.wireguard.tls.certresolver=default
       - traefik.udp.routers.wireguard.entrypoints=wireguard
     cap_add:
       - NET_ADMIN
