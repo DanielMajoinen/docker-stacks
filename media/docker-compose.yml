@@ -1,0 +1,66 @@
+version: '3.9'
+
+services:
+  rclone:
+    container_name: media_rclone_mount
+    image: rclone/rclone:latest
+    user: ${PUID}:${PGID}
+    command: '--drive-impersonate ${EMAIL} mount media: /mnt/media --allow-other --allow-non-empty'
+    volumes:
+      - /etc/passwd:/etc/passwd:ro
+      - /etc/group:/etc/group:ro
+      - ${ROOT_DIRECTORY}/rclone/config:/config/rclone
+      - ${ROOT_DIRECTORY}/rclone/mnt/media:/mnt/media:shared
+    cap_add:
+      - SYS_ADMIN
+    devices:
+      - /dev/fuse
+    security_opt:
+      - apparmor:unconfined
+    networks:
+      - backend
+    restart: unless-stopped
+
+  mergerfs:
+    container_name: media_mergerfs
+    image: hotio/mergerfs:latest
+    user: ${PUID}:${PGID}
+    command: '/mnt/media\* /mergerfs/media -o nonempty,direct_io,use_ino,category.create=epff,moveonenospc=true,minfreespace=20G,fsname=media'
+    volumes:
+      - /etc/passwd:/etc/passwd:ro
+      - /etc/group:/etc/group:ro
+      - ${ROOT_DIRECTORY}/mergerfs/media:/mergerfs/media:shared
+      - ${ROOT_DIRECTORY}/rclone/mnt/media:/mnt/media_rclone:slave
+    cap_add:
+      - SYS_ADMIN
+    devices:
+      - /dev/fuse
+    security_opt:
+      - apparmor:unconfined
+    networks:
+      - backend
+    depends_on:
+      - rclone
+    restart: unless-stopped
+
+  plex:
+    container_name: media_plex
+    image: linuxserver/plex:latest
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - VERSION=docker
+    volumes:
+      - ${ROOT_DIRECTORY}/plex:/config
+      - ${ROOT_DIRECTORY}/mergerfs/media:/media:slave
+    depends_on:
+      - rclone
+    devices:
+      - /dev/dri:/dev/dri
+    network_mode: host
+    restart: unless-stopped
+
+networks:
+  frontend:
+    external: true
+  backend:
