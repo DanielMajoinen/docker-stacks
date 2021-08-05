@@ -10,3 +10,4 @@
 !*/prometheus/prometheus.yml
 !*/traefik/traefik.toml
 !*/mqtt/mosquitto.conf
+!*/mergerfs/fuse.conf

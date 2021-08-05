@@ -25,10 +25,11 @@ services:
     container_name: media_mergerfs
     image: hotio/mergerfs:latest
     user: ${PUID}:${PGID}
-    command: '/mnt/media\* /mergerfs/media -o nonempty,direct_io,use_ino,category.create=epff,moveonenospc=true,minfreespace=20G,fsname=media'
+    command: '/mnt/media\* /mergerfs/media -o allow_other,nonempty,direct_io,use_ino,category.create=epff,moveonenospc=true,minfreespace=20G,fsname=media'
     volumes:
       - /etc/passwd:/etc/passwd:ro
       - /etc/group:/etc/group:ro
+      - ${ROOT_DIRECTORY}/mergerfs/fuse.conf:/etc/fuse.conf
       - ${ROOT_DIRECTORY}/mergerfs/media:/mergerfs/media:shared
       - ${ROOT_DIRECTORY}/rclone/mnt/media:/mnt/media_rclone:slave
     cap_add:
