@@ -39,6 +39,7 @@ services:
       - mariadb
       - mqtt
     volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
       - /etc/localtime:/etc/localtime:ro
       - ${ROOT_DIRECTORY}/home-assistant:/config
       - ${ROOT_DIRECTORY}/home-assistant/docker/run:/etc/services.d/home-assistant/run
