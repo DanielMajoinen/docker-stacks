@@ -53,6 +53,18 @@ services:
       - SYS_ADMIN
     network_mode: host
     restart: unless-stopped
+  
+  dockermon:
+    image: philhawthorne/ha-dockermon:latest
+    container_name: home_dockermon
+    ports:
+      - 8126:8126
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${ROOT_DIRECTORY}/dockermon:/config
+    networks:
+      - backend
+    restart: unless-stopped
 
 networks:
   frontend:
