@@ -41,6 +41,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /etc/localtime:/etc/localtime:ro
+      - ${LOCAL_MEDIA_DIRECTORY}:/mnt/media:ro
       - ${ROOT_DIRECTORY}/home-assistant:/config
       - ${ROOT_DIRECTORY}/home-assistant/docker/run:/etc/services.d/home-assistant/run
     environment:
@@ -53,6 +54,26 @@ services:
       - NET_BIND_SERVICE
       - SYS_ADMIN
     network_mode: host
+    restart: unless-stopped
+
+  esphome:
+    container_name: home_esphome
+    image: esphome/esphome:latest
+    ports:
+      - 6052:6052
+    volumes:
+      - ${ROOT_DIRECTORY}/esphome:/config
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=frontend
+      - traefik.backend=esphome
+      - traefik.http.routers.esphome.service=esphome
+      - traefik.http.routers.esphome.entrypoints=websecure
+      - traefik.http.routers.esphome.rule=Host(`esphome.${LOCAL_DOMAIN}`)
+      - traefik.http.routers.esphome.tls=true
+    networks:
+      - frontend
+      - backend
     restart: unless-stopped
 
 networks:
